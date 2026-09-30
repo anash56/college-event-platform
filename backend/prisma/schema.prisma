@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  CLUB
+  COLLEGE_ADMIN
+  PLATFORM_ADMIN
+}
+
+enum CollegeVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ClubStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model College {
+  id                 String                    @id @default(uuid())
+  name               String
+  domain             String                    @unique
+  aicteId            String?                   @unique
+  verificationStatus CollegeVerificationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  clubs         Club[]
+  venues        Venue[]
+  subscriptions Subscription[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+
+  // Students self-declare their college.
+  // Admins and club users are connected to their college.
+  collegeId String?
+  college   College? @relation(fields: [collegeId], references: [id])
+
+  emailVerified     Boolean   @default(false)
+  collegeVerifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownedClub     Club?
+  approvedClubs Club[]         @relation("ClubApprover")
+  registrations Registration[]
+  fraudReports  FraudReport[]
+  auditLogs     AuditLog[]
+
+  @@index([collegeId])
+  @@index([role])
+}
+
+model Club {
+  id          String     @id @default(uuid())
+  collegeId   String
+  ownerUserId String     @unique
+  name        String
+  status      ClubStatus @default(PENDING)
+
+  approvedBy String?
+  approvedAt DateTime?
+
+  college  College @relation(fields: [collegeId], references: [id])
+  owner    User    @relation(fields: [ownerUserId], references: [id])
+  approver User?   @relation("ClubApprover", fields: [approvedBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([collegeId, name])
+  @@index([collegeId])
+  @@index([status])
+}
+
+model Venue {
+  id        String @id @default(uuid())
+  collegeId String
+  name      String
+  capacity  Int
+
+  college College @relation(fields: [collegeId], references: [id])
+  events  Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([collegeId, name])
+  @@index([collegeId])
+}
+
+enum PayoutOwnerType {
+  COLLEGE
+  CLUB
+}
+
+enum PayoutAccountStatus {
+  PENDING
+  ACTIVE
+  DISABLED
+}
+
+model PayoutAccount {
+  id               String              @id @default(uuid())
+  ownerType        PayoutOwnerType
+  ownerId          String
+  gatewayAccountId String
+  status           PayoutAccountStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events Event[]
+
+  @@unique([ownerType, ownerId])
+}
+
+enum EventCreatorType {
+  COLLEGE
+  CLUB
+}
+
+enum EventVisibility {
+  COLLEGE_ONLY
+  OPEN
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+model Event {
+  id String @id @default(uuid())
+
+  creatorType EventCreatorType
+  creatorId   String
+
+  venueId     String?
+  title       String
+  description String?
+
+  startTime DateTime
+  endTime   DateTime
+
+  capacity Int?
+
+  visibility EventVisibility @default(COLLEGE_ONLY)
+
+  isPaid Boolean  @default(false)
+  price  Decimal?
+
+  payoutAccountId String?
+  status          EventStatus @default(DRAFT)
+
+  venue         Venue?         @relation(fields: [venueId], references: [id])
+  payoutAccount PayoutAccount? @relation(fields: [payoutAccountId], references: [id])
+
+  registrations Registration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorType, creatorId])
+  @@index([venueId])
+  @@index([visibility, status])
+  @@index([startTime])
+}
+
+enum RegistrationPaymentStatus {
+  FREE
+  PENDING
+  PAID
+  FAILED
+}
+
+model Registration {
+  id            String                    @id @default(uuid())
+  eventId       String
+  userId        String
+  paymentStatus RegistrationPaymentStatus @default(FREE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  payment Payment?
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  registrationId String        @unique
+  gatewayTxnId   String        @unique
+  amount         Decimal
+  status         PaymentStatus @default(SUCCESS)
+
+  rawWebhookPayload Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+}
+
+enum SubscriptionPlan {
+  FREE
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+}
+
+model Subscription {
+  id        String @id @default(uuid())
+  collegeId String
+
+  plan   SubscriptionPlan   @default(FREE)
+  status SubscriptionStatus @default(ACTIVE)
+
+  autoRenew Boolean @default(true)
+
+  eventsUsed     Int  @default(0)
+  freeEventLimit Int?
+
+  startDate DateTime
+  endDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  college College @relation(fields: [collegeId], references: [id])
+
+  @@index([collegeId])
+  @@index([status])
+  @@index([endDate])
+}
+
+enum ReportEntityType {
+  COLLEGE
+  CLUB
+  EVENT
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+}
+
+model FraudReport {
+  id         String           @id @default(uuid())
+  reportedBy String
+  entityType ReportEntityType
+  entityId   String
+  reason     String
+  status     ReportStatus     @default(OPEN)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reporter User @relation(fields: [reportedBy], references: [id])
+
+  @@index([reportedBy])
+  @@index([entityType, entityId])
+  @@index([status])
+}
+
+model AuditLog {
+  id String @id @default(uuid())
+
+  actorUserId String?
+  action      String
+
+  entityType String
+  entityId   String
+
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
