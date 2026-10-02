@@ -3,12 +3,12 @@ import { hashPassword } from "../utils/password";
 import { UserRole } from "../../generated/prisma/enums";
 import { comparePassword } from "../utils/password";
 import { generateToken } from "../utils/jwt";
+import { createOrRefreshEmailVerification } from "./email-verification.service";
 
 interface RegisterInput {
   name: string;
   email: string;
   password: string;
-  role?: UserRole;
   collegeId?: string;
 }
 
@@ -26,27 +26,32 @@ export const registerUser = async (input: RegisterInput) => {
   const passwordHash = await hashPassword(input.password);
 
   const user = await prisma.user.create({
-    data: {
-      name: input.name,
-      email: input.email,
-      passwordHash,
-      role: input.role ?? UserRole.STUDENT,
-      ...(input.collegeId !== undefined && {
-        collegeId: input.collegeId
-      })
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      collegeId: true,
-      emailVerified: true,
-      createdAt: true
-    }
-  });
+  data: {
+    name: input.name,
+    email: input.email,
+    passwordHash,
+    role: UserRole.STUDENT,
+    ...(input.collegeId !== undefined && {
+      collegeId: input.collegeId
+    })
+  },
+  select: {
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    collegeId: true,
+    emailVerified: true,
+    createdAt: true
+  }
+});
 
-  return user;
+await createOrRefreshEmailVerification(
+  user.id,
+  user.email
+);
+
+return user;
 };
 
 export const loginUser = async (
