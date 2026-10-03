@@ -2,6 +2,7 @@ import express from "express";
 import authRoutes from "./routes/auth.routes";
 import adminRoutes from "./routes/admin.routes";
 import emailVerificationRoutes from "./routes/email-verification.routes";
+import collegeRoutes from "./routes/college.routes";
 
 const app = express();
 
@@ -20,5 +21,6 @@ app.use(
   "/api/auth/email",
   emailVerificationRoutes
 );
+app.use("/api/colleges", collegeRoutes);
 
 export default app;
