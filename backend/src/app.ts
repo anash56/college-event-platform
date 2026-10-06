@@ -3,6 +3,10 @@ import authRoutes from "./routes/auth.routes";
 import adminRoutes from "./routes/admin.routes";
 import emailVerificationRoutes from "./routes/email-verification.routes";
 import collegeRoutes from "./routes/college.routes";
+import clubRoutes from "./routes/club.routes";
+import governmentInstitutionRoutes from "./routes/governmentInstitution.routes";
+
+
 
 const app = express();
 
@@ -22,5 +26,11 @@ app.use(
   emailVerificationRoutes
 );
 app.use("/api/colleges", collegeRoutes);
+
+app.use("/api/clubs", clubRoutes);
+app.use(
+  "/api/institutions",
+  governmentInstitutionRoutes
+);
 
 export default app;

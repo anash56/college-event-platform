@@ -332,3 +332,25 @@ model EmailVerification {
 
   @@index([expiresAt])
 }
+
+model GovernmentInstitution {
+  id                  String   @id @default(uuid())
+
+  aisheCode           String   @unique
+  name                String
+  state               String
+  district            String
+  website             String?
+
+  yearOfEstablishment Int?
+  location            String?
+  collegeType         String?
+  management          String?
+
+  universityAisheCode String?
+  universityName      String?
+  universityType      String?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
