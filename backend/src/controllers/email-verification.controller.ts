@@ -1,8 +1,8 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/authenticate";
 import {
-  verifyEmail,
-  resendVerificationEmail
+  verifyUserEmail,
+  resendVerificationEmail,
 } from "../services/email-verification.service";
 
 export const verifyEmailAddress = async (
@@ -18,7 +18,7 @@ export const verifyEmailAddress = async (
   return;
 }
 
-await verifyEmail(
+await verifyUserEmail(
   req.user.userId,
   req.body.otp
 );

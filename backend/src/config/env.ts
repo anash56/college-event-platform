@@ -18,5 +18,6 @@ export const env = {
 
   BREVO_API_KEY: requiredEnv("BREVO_API_KEY"),
   BREVO_SENDER_EMAIL: requiredEnv("BREVO_SENDER_EMAIL"),
-  BREVO_SENDER_NAME: requiredEnv("BREVO_SENDER_NAME")
+  BREVO_SENDER_NAME: requiredEnv("BREVO_SENDER_NAME"),
+  FRONTEND_URL: requiredEnv("FRONTEND_URL")
 };

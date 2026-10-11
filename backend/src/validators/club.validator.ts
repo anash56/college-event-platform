@@ -1,10 +1,18 @@
+
 import { z } from "zod";
 
 export const createClubSchema = z.object({
-  name: z
+  ownerName: z
     .string()
     .trim()
-    .min(2, "Club name must be at least 2 characters"),
+    .min(2, "Owner name must be at least 2 characters")
+    .max(100, "Owner name must be at most 100 characters"),
+
+  clubName: z
+    .string()
+    .trim()
+    .min(2, "Club name must be at least 2 characters")
+    .max(100, "Club name must be at most 100 characters"),
 
   email: z
     .string()

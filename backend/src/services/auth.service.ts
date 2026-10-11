@@ -46,12 +46,10 @@ export const registerUser = async (input: RegisterInput) => {
   }
 });
 
-await createOrRefreshEmailVerification(
-  user.id,
-  user.email
-);
+await createOrRefreshEmailVerification(user.email);
 
 return user;
+
 };
 
 export const loginUser = async (
