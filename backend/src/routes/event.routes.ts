@@ -2,10 +2,16 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/authenticate";
 import { validate } from "../middleware/validate";
-import { createEventRequest,getMyEventsController,updateEventController,  publishEventController,
-  cancelEventController
+import {
+  createEventController,
+  getMyEventsController,
+  updateEventController,
+  publishEventController,
+  cancelEventController,
+  getPublishedEventsController,
 } from "../controllers/event.controller";
 import { createEventSchema,updateEventSchema } from "../validators/event.validator";
+import { eventDiscoveryQuerySchema } from "../validators/event-discovery.validator";
 
 const router = Router();
 
@@ -13,7 +19,7 @@ router.post(
   "/",
   authenticate,
   validate(createEventSchema),
-  createEventRequest
+  createEventController
 );
 
 
@@ -41,4 +47,12 @@ router.patch(
   authenticate,
   cancelEventController
 );
+
+router.get(
+  "/",
+  authenticate,
+  validate(eventDiscoveryQuerySchema, "query"),
+  getPublishedEventsController
+);
+
 export default router;

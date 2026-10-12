@@ -1,4 +1,3 @@
-
 import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/authenticate";
 import {
@@ -7,22 +6,23 @@ import {
   updateEvent,
   publishEvent,
   cancelEvent,
+  getPublishedEvents,
 } from "../services/event.service";
 
-export const createEventRequest = async (
+export const createEventController = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const event = await createEvent({
       userId: req.user!.userId,
-      ...req.body
+      ...req.body,
     });
 
     res.status(201).json({
       success: true,
       message: "Event created successfully",
-      data: event
+      data: event,
     });
   } catch (error) {
     const statusByMessage: Record<string, number> = {
@@ -40,7 +40,7 @@ export const createEventRequest = async (
       "Event capacity exceeds venue capacity": 400,
       "External venue name and address are both required": 400,
       "Paid events require a positive price": 400,
-      "Free events cannot have a price": 400
+      "Free events cannot have a price": 400,
     };
 
     const message =
@@ -56,15 +56,14 @@ export const createEventRequest = async (
     console.error("Create event error:", error);
     res.status(500).json({
       success: false,
-      message: "Event creation failed"
+      message: "Event creation failed",
     });
   }
 };
 
-
 export const getMyEventsController = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const events = await getMyEvents(req.user!.userId);
@@ -99,10 +98,9 @@ export const getMyEventsController = async (
   }
 };
 
-
 export const updateEventController = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const event = await updateEvent({
@@ -142,16 +140,12 @@ export const updateEventController = async (
   }
 };
 
-
 export const publishEventController = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
-    const event = await publishEvent(
-      req.user!.userId,
-      req.params.id as string
-    );
+    const event = await publishEvent(req.user!.userId, req.params.id as string);
 
     res.status(200).json({
       success: true,
@@ -179,16 +173,12 @@ export const publishEventController = async (
   }
 };
 
-
 export const cancelEventController = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
-    const event = await cancelEvent(
-      req.user!.userId,
-      req.params.id as string
-    );
+    const event = await cancelEvent(req.user!.userId, req.params.id as string);
 
     res.status(200).json({
       success: true,
@@ -213,5 +203,70 @@ export const cancelEventController = async (
     }
 
     res.status(400).json({ success: false, message });
+  }
+};
+
+export const getPublishedEventsController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const showAllColleges = req.query.all === "true";
+
+    const search =
+      typeof req.query.search === "string"
+        ? req.query.search.trim()
+        : undefined;
+
+    const paymentType =
+      req.query.paymentType === "FREE" || req.query.paymentType === "PAID"
+        ? req.query.paymentType
+        : undefined;
+
+    const page = Math.max(1, Number(req.query.page) || 1);
+
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
+
+    const result = await getPublishedEvents(
+      req.user!.userId,
+      showAllColleges,
+      search,
+      paymentType,
+      page,
+      limit,
+    );
+
+    res.status(200).json({
+      success: true,
+      count: result.events.length,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+      hasNextPage: result.page < result.totalPages,
+      hasPreviousPage: result.page > 1,
+      events: result.events,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch events";
+
+    if (message === "User not found") {
+      res.status(404).json({ success: false, message });
+      return;
+    }
+
+    if (
+      message === "Only students can browse events" ||
+      message === "Student is not associated with a college"
+    ) {
+      res.status(403).json({ success: false, message });
+      return;
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch events",
+    });
   }
 };

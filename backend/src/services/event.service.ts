@@ -1,4 +1,3 @@
-
 import { prisma } from "../lib/prisma";
 
 interface CreateEventInput {
@@ -28,10 +27,10 @@ export const createEvent = async (input: CreateEventInput) => {
         select: {
           id: true,
           collegeId: true,
-          status: true
-        }
-      }
-    }
+          status: true,
+        },
+      },
+    },
   });
 
   if (!user) throw new Error("User not found");
@@ -50,7 +49,7 @@ export const createEvent = async (input: CreateEventInput) => {
 
     const college = await prisma.college.findUnique({
       where: { id: user.collegeId },
-      select: { verificationStatus: true }
+      select: { verificationStatus: true },
     });
 
     if (!college || college.verificationStatus !== "VERIFIED") {
@@ -95,7 +94,7 @@ export const createEvent = async (input: CreateEventInput) => {
   if (input.venueId) {
     const venue = await prisma.venue.findFirst({
       where: { id: input.venueId, collegeId },
-      select: { id: true, capacity: true }
+      select: { id: true, capacity: true },
     });
 
     if (!venue) throw new Error("Venue not found in your college");
@@ -132,11 +131,10 @@ export const createEvent = async (input: CreateEventInput) => {
       visibility: input.visibility ?? "COLLEGE_ONLY",
       isPaid: input.isPaid,
       price: input.isPaid ? input.price! : null,
-      status: "DRAFT"
-    }
+      status: "DRAFT",
+    },
   });
 };
-
 
 export const getMyEvents = async (userId: string) => {
   const user = await prisma.user.findUnique({
@@ -198,8 +196,6 @@ export const getMyEvents = async (userId: string) => {
   throw new Error("You are not allowed to view organizer events");
 };
 
-
-
 interface UpdateEventInput {
   userId: string;
   eventId: string;
@@ -236,24 +232,19 @@ export const updateEvent = async (input: UpdateEventInput) => {
 
   if (
     user.role === "COLLEGE_ADMIN" &&
-    (event.creatorType !== "COLLEGE" ||
-      event.creatorId !== user.collegeId)
+    (event.creatorType !== "COLLEGE" || event.creatorId !== user.collegeId)
   ) {
     throw new Error("You cannot update this event");
   }
 
   if (
     user.role === "CLUB" &&
-    (event.creatorType !== "CLUB" ||
-      event.creatorId !== user.ownedClub?.id)
+    (event.creatorType !== "CLUB" || event.creatorId !== user.ownedClub?.id)
   ) {
     throw new Error("You cannot update this event");
   }
 
-  if (
-    user.role !== "COLLEGE_ADMIN" &&
-    user.role !== "CLUB"
-  ) {
+  if (user.role !== "COLLEGE_ADMIN" && user.role !== "CLUB") {
     throw new Error("You are not allowed to update events");
   }
 
@@ -265,16 +256,13 @@ export const updateEvent = async (input: UpdateEventInput) => {
     ? new Date(input.startTime)
     : event.startTime;
 
-  const endTime = input.endTime
-    ? new Date(input.endTime)
-    : event.endTime;
+  const endTime = input.endTime ? new Date(input.endTime) : event.endTime;
 
   if (endTime <= startTime) {
     throw new Error("End time must be after start time");
   }
 
-  const venueId =
-    input.venueId !== undefined ? input.venueId : event.venueId;
+  const venueId = input.venueId !== undefined ? input.venueId : event.venueId;
 
   const externalVenue =
     input.externalVenue !== undefined
@@ -282,9 +270,7 @@ export const updateEvent = async (input: UpdateEventInput) => {
       : event.externalVenue;
 
   const venueAddress =
-    input.venueAddress !== undefined
-      ? input.venueAddress
-      : event.venueAddress;
+    input.venueAddress !== undefined ? input.venueAddress : event.venueAddress;
 
   if (venueId && (externalVenue || venueAddress)) {
     throw new Error("Choose a registered venue or an external venue");
@@ -301,12 +287,10 @@ export const updateEvent = async (input: UpdateEventInput) => {
         collegeId:
           user.role === "COLLEGE_ADMIN"
             ? user.collegeId!
-            : (
-                await prisma.club.findUnique({
-                  where: { id: user.ownedClub!.id },
-                  select: { collegeId: true },
-                })
-              )!.collegeId,
+            : (await prisma.club.findUnique({
+                where: { id: user.ownedClub!.id },
+                select: { collegeId: true },
+              }))!.collegeId,
       },
       select: { id: true, capacity: true },
     });
@@ -338,11 +322,7 @@ export const updateEvent = async (input: UpdateEventInput) => {
   });
 };
 
-
-export const publishEvent = async (
-  userId: string,
-  eventId: string
-) => {
+export const publishEvent = async (userId: string, eventId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -366,16 +346,14 @@ export const publishEvent = async (
 
     if (
       user.role === "COLLEGE_ADMIN" &&
-      (event.creatorType !== "COLLEGE" ||
-        event.creatorId !== user.collegeId)
+      (event.creatorType !== "COLLEGE" || event.creatorId !== user.collegeId)
     ) {
       throw new Error("You cannot publish this event");
     }
 
     if (
       user.role === "CLUB" &&
-      (event.creatorType !== "CLUB" ||
-        event.creatorId !== user.ownedClub?.id)
+      (event.creatorType !== "CLUB" || event.creatorId !== user.ownedClub?.id)
     ) {
       throw new Error("You cannot publish this event");
     }
@@ -418,7 +396,7 @@ export const publishEvent = async (
       event.venueId,
       event.startTime,
       event.endTime,
-      event.id
+      event.id,
     );
 
     if (event.isPaid) {
@@ -438,13 +416,12 @@ export const publishEvent = async (
   });
 };
 
-
 const checkVenueAvailability = async (
   client: Pick<typeof prisma, "event">,
   venueId: string | null,
   startTime: Date,
   endTime: Date,
-  excludeEventId?: string
+  excludeEventId?: string,
 ) => {
   if (!venueId) return;
 
@@ -465,11 +442,7 @@ const checkVenueAvailability = async (
   }
 };
 
-
-export const cancelEvent = async (
-  userId: string,
-  eventId: string
-) => {
+export const cancelEvent = async (userId: string, eventId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -494,16 +467,14 @@ export const cancelEvent = async (
 
   if (
     user.role === "COLLEGE_ADMIN" &&
-    (event.creatorType !== "COLLEGE" ||
-      event.creatorId !== user.collegeId)
+    (event.creatorType !== "COLLEGE" || event.creatorId !== user.collegeId)
   ) {
     throw new Error("You cannot cancel this event");
   }
 
   if (
     user.role === "CLUB" &&
-    (event.creatorType !== "CLUB" ||
-      event.creatorId !== user.ownedClub?.id)
+    (event.creatorType !== "CLUB" || event.creatorId !== user.ownedClub?.id)
   ) {
     throw new Error("You cannot cancel this event");
   }
@@ -520,4 +491,117 @@ export const cancelEvent = async (
     where: { id: eventId },
     data: { status: "CANCELLED" },
   });
+};
+
+export const getPublishedEvents = async (
+  userId: string,
+  showAllColleges: boolean = false,
+  search?: string,
+  paymentType?: "FREE" | "PAID",
+  page: number = 1,
+  limit: number = 10,
+) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      role: true,
+      collegeId: true,
+    },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  if (user.role !== "STUDENT") {
+    throw new Error("Only students can browse events");
+  }
+
+  if (!user.collegeId) {
+    throw new Error("Student is not associated with a college");
+  }
+
+  const clubs = await prisma.club.findMany({
+    where: {
+      collegeId: user.collegeId,
+      status: "APPROVED",
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const clubIds = clubs.map((club) => club.id);
+
+  const where = {
+    status: "PUBLISHED" as const,
+    startTime: {
+      gte: new Date(),
+    },
+    ...(search && {
+  AND: [
+    {
+      OR: [
+        {
+          title: {
+            contains: search,
+            mode: "insensitive" as const,
+          },
+        },
+        {
+          description: {
+            contains: search,
+            mode: "insensitive" as const,
+          },
+        },
+      ],
+    },
+  ],
+}),
+    ...(paymentType === "FREE" && { isPaid: false }),
+    ...(paymentType === "PAID" && { isPaid: true }),
+    OR: showAllColleges
+      ? [
+          { visibility: "OPEN" as const },
+          {
+            creatorType: "COLLEGE" as const,
+            creatorId: user.collegeId,
+          },
+          {
+            creatorType: "CLUB" as const,
+            creatorId: { in: clubIds },
+          },
+        ]
+      : [
+          {
+            creatorType: "COLLEGE" as const,
+            creatorId: user.collegeId,
+          },
+          {
+            creatorType: "CLUB" as const,
+            creatorId: { in: clubIds },
+          },
+        ],
+  };
+
+  const [events, total] = await Promise.all([
+    prisma.event.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        venue: true,
+      },
+      orderBy: {
+        startTime: "asc",
+      },
+    }),
+    prisma.event.count({ where }),
+  ]);
+
+  return {
+    events,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 };
