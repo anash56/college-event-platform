@@ -1,5 +1,4 @@
 import { prisma } from "../lib/prisma";
-import { Prisma } from "../../generated/prisma/client";
 import { createOrRefreshEmailVerification } from "./email-verification.service";
 import {
   generateInvitationToken,

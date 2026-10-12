@@ -161,7 +161,7 @@ export const resendCollegeApplicationEmailController = async (
 };
 
 export const getPendingCollegeApplicationsController = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
   try {

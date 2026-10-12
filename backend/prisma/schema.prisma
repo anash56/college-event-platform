@@ -168,6 +168,8 @@ model Event {
   startTime DateTime
   endTime   DateTime
 
+  externalVenue String?
+  venueAddress  String?
   capacity Int?
 
   visibility EventVisibility @default(COLLEGE_ONLY)

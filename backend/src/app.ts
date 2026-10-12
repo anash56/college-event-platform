@@ -7,7 +7,7 @@ import governmentInstitutionRoutes from "./routes/governmentInstitution.routes";
 import collegeApplicationRoutes from "./routes/collegeApplication.routes";
 import collegeAdminInvitationRoutes from "./routes/college-admin-invitation.routes";
 import venueRoutes from "./routes/venue.routes";
-
+import eventRoutes from "./routes/event.routes";
 
 const app = express();
 
@@ -40,5 +40,7 @@ app.use(
   collegeAdminInvitationRoutes
 );
 app.use("/api/venues", venueRoutes);
+
+app.use("/api/events", eventRoutes);
 
 export default app;
