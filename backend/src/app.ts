@@ -8,6 +8,7 @@ import collegeApplicationRoutes from "./routes/collegeApplication.routes";
 import collegeAdminInvitationRoutes from "./routes/college-admin-invitation.routes";
 import venueRoutes from "./routes/venue.routes";
 import eventRoutes from "./routes/event.routes";
+import registrationRoutes from "./routes/registration.routes";
 
 const app = express();
 
@@ -42,5 +43,7 @@ app.use(
 app.use("/api/venues", venueRoutes);
 
 app.use("/api/events", eventRoutes);
+
+app.use("/api/registrations", registrationRoutes);
 
 export default app;

@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "test:event-discovery": "tsx scripts/event-discovery-e2e.ts"
+    "start": "node dist/server.js"
+
   },
   "keywords": [],
   "author": "",

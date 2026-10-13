@@ -201,11 +201,17 @@ enum RegistrationPaymentStatus {
   FAILED
 }
 
+enum RegistrationStatus {
+  ACTIVE
+  CANCELLED
+}
+
 model Registration {
   id            String                    @id @default(uuid())
   eventId       String
   userId        String
   paymentStatus RegistrationPaymentStatus @default(FREE)
+  status        RegistrationStatus        @default(ACTIVE)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
